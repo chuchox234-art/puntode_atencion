@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Autoservicio Jurídico (Local)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='%23d4d4d8' fill-opacity='0.4'%3E%3Crect x='0' y='0' width='100' height='1'/%3E%3Crect x='0' y='0' width='1' height='100'/%3E%3C/g%3E%3C/svg%3E");
+        }
+        .view { display: none; }
+        .active-view { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .calendar-day.available:hover { background-color: #1e3a8a; color: white; }
+        .time-slot.available:hover { background-color: #1e40af; color: white; }
+        .main-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .menu-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .formal-btn {
+            background-color: #111827; /* Gris oscuro */
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .formal-btn:hover {
+            background-color: #374151;
+        }
+        .accent-btn {
+            background-color: #ca8a04; /* Dorado/ocre */
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .accent-btn:hover {
+            background-color: #a16207;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto p-6 md:p-10 space-y-8 main-container">
+        
+        <header class="text-center pb-4 flex flex-col items-center">
+             <svg id="export-logo-btn" class="w-16 h-16 text-gray-800 mb-4 cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <title>Exportar Registros a Excel</title>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18M18.75 3v18M9 6.75h6M9 11.25h6M9 15.75h6M5.25 21v-3.375c0-.621.504-1.125 1.125-1.125h11.25c.621 0 1.125.504 1.125 1.125V21" />
+            </svg>
+            <h2 class="text-xl font-semibold text-gray-600 mb-2">Consejo Superior de la Judicatura</h2>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Portal de Autoservicio Jurídico</h1>
+            <p id="userInfoHeader" class="text-gray-600 mt-2 font-medium"></p>
+            <button id="logout-btn" class="hidden mt-2 text-sm text-blue-600 hover:underline">Retorno al Inicio de Sesión</button>
+        </header>
+
+        <div id="login-view" class="view">
+            <div class="text-center border-b pb-4 mb-8">
+                <h2 class="text-2xl font-semibold text-gray-700">Identificación del Usuario</h2>
+                <p class="text-gray-500 mt-2">Por favor, ingrese sus datos para continuar.</p>
+            </div>
+            <div class="mt-8 max-w-md mx-auto">
+                <div class="space-y-6">
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                        <input type="text" id="nombre" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-yellow-600" placeholder="Ej: Ana María Pérez">
+                    </div>
+                    <div>
+                        <label for="cedula" class="block text-sm font-medium text-gray-700">Cédula de Ciudadanía</label>
+                        <input type="number" id="cedula" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-yellow-600" placeholder="Ej: 1020304050">
+                    </div>
+                    <div>
+                        <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono con WhatsApp</label>
+                        <input type="number" id="telefono" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-yellow-600" placeholder="Ej: 3001234567">
+                    </div>
+                    <div>
+                        <label for="genero" class="block text-sm font-medium text-gray-700">Género</label>
+                        <select id="genero" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-yellow-600">
+                            <option value="">Seleccione una opción</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                            <option value="Prefiero no decirlo">Prefiero no decirlo</option>
+                        </select>
+                    </div>
+                    <button id="login-btn" class="w-full formal-btn py-3 rounded-md">Ingresar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="menu-view" class="view">
+             <div class="text-center mb-8 border-b pb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">Menú Principal</h2>
+                <p class="text-gray-500 mt-2">Seleccione la opción que desea realizar.</p>
+            </div>
+
+            <div id="appointment-reminder" class="hidden p-4 mb-6 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-r-lg">
+                <div class="flex">
+                    <div class="py-1"><svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                    <div class="ml-3">
+                        <p class="font-bold">Próxima Cita Agendada</p>
+                        <p id="reminder-text" class="text-sm"></p>
+                        <button onclick="confirmCancelAppointment()" class="mt-2 text-sm font-semibold text-red-600 hover:text-red-800 underline">Cancelar Cita</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <button onclick="showCalendar('Punto de Atención Jurídico')" class="menu-card text-left p-6 bg-white rounded-lg border border-gray-200 flex items-start space-x-4">
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0012 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 01-2.036.243c-2.132 0-4.23-1.02-5.518-2.671a48.458 48.458 0 00-4.904 0c-1.288 1.65-3.386 2.67-5.518 2.67-1.015 0-1.99-.18-2.903-.518c-.483-.174-.711-.703-.59-1.202L8.25 4.971m10.5 0l-2.62 10.726M3.75 4.971l2.62 10.726" /></svg></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Punto de Atención Jurídico</h3>
+                        <p class="mt-1 text-gray-600">Agende una cita.</p>
+                    </div>
+                </button>
+                <button onclick="showCalendar('Conciliación y Mediaciones')" class="menu-card text-left p-6 bg-white rounded-lg border border-gray-200 flex items-start space-x-4">
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1.5a2.5 2.5 0 00-5 0V21M3 21v-1.5a2.5 2.5 0 015 0V21" /></svg></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Conciliación y Mediaciones</h3>
+                        <p class="mt-1 text-gray-600">Programe una cita.</p>
+                    </div>
+                </button>
+                <button onclick="showView('doc-court-choice-view')" class="menu-card text-left p-6 bg-white rounded-lg border border-gray-200 flex items-start space-x-4">
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Generar Documento Legal</h3>
+                        <p class="mt-1 text-gray-600">Cree y edite borradores.</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div id="calendar-view" class="view">
+            <h2 id="calendar-title" class="text-2xl font-semibold text-gray-700 text-center mb-6 border-b pb-4"></h2>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="w-full md:w-1/2">
+                    <div class="flex items-center justify-between mb-4">
+                        <button id="prev-month" class="p-2 rounded-full hover:bg-gray-200">&lt;</button>
+                        <h3 id="month-year" class="text-xl font-semibold text-gray-700"></h3>
+                        <button id="next-month" class="p-2 rounded-full hover:bg-gray-200">&gt;</button>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center"></div>
+                </div>
+                <div id="time-slots-container" class="w-full md:w-1/2">
+                    <h3 class="font-semibold text-lg mb-4 text-gray-700">Horarios Disponibles para <span id="selected-date-span"></span></h3>
+                    <div id="time-slots" class="grid grid-cols-2 gap-2">
+                        <p class="text-gray-500 col-span-2">Seleccione un día disponible en el calendario.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                <button onclick="showView('menu-view')" class="formal-btn py-3 rounded-md">Volver al Menú</button>
+            </div>
+        </div>
+
+        <div id="doc-court-choice-view" class="view">
+            <div class="text-center mb-8 border-b pb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">Selección de Despacho</h2>
+                <p class="text-gray-500 mt-2">Por favor, seleccione el tipo de juzgado al que se dirige el documento.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <button onclick="selectCourtAndProceed('Juzgado Promiscuo del Circuito')" class="menu-card p-6 bg-white rounded-lg transition text-lg font-semibold">
+                    Juzgado Promiscuo del Circuito
+                </button>
+                <button onclick="selectCourtAndProceed('Juzgado Promiscuo Municipal')" class="menu-card p-6 bg-white rounded-lg transition text-lg font-semibold">
+                    Juzgado Promiscuo Municipal
+                </button>
+            </div>
+            <div class="mt-8 text-center">
+                <button onclick="showView('menu-view')" class="formal-btn py-3 rounded-md">Volver al Menú</button>
+            </div>
+        </div>
+
+        <div id="generate-doc-view" class="view">
+            <h2 class="text-2xl font-semibold text-gray-700 text-center mb-6 border-b pb-4">Generador de Documentos Legales</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                <button onclick="generateDocument('Memorial o Derecho de Petición')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Memorial / Derecho de Petición</button>
+                <button onclick="generateDocument('Pago de Títulos')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Pago de Títulos</button>
+                <button onclick="generateDocument('Liquidación de Contrato')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Liquidación por Terminación de Contrato</button>
+                <button onclick="generateDocument('Acción de Tutela')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition">Acción de Tutela</button>
+            </div>
+            <div id="doc-preview-container" class="mt-8 max-w-3xl mx-auto hidden">
+                <h3 class="text-lg font-semibold text-gray-700">Editor de Documento: <span id="doc-preview-title"></span></h3>
+                <textarea id="doc-preview-content" class="mt-4 p-4 w-full border border-gray-300 rounded-md bg-white h-96 focus:ring-2 focus:ring-yellow-600 focus:border-yellow-600 transition"></textarea>
+                <div class="mt-4 flex justify-center space-x-4">
+                     <button id="download-btn" class="accent-btn py-3 rounded-md">Descargar como .TXT</button>
+                     <button id="prepare-email-btn" class="formal-btn py-3 rounded-md">Preparar Correo para Envío</button>
+                </div>
+            </div>
+             <div class="mt-8 text-center">
+                <button onclick="showView('doc-court-choice-view')" class="formal-btn py-3 rounded-md">Volver a Selección de Juzgado</button>
+            </div>
+        </div>
+        
+    </div>
+
+    <div id="notification-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-8 max-w-sm w-full text-center border-t-4 border-yellow-500">
+            <h3 id="modal-title" class="text-xl font-bold text-gray-800"></h3>
+            <p id="modal-message" class="mt-4 text-gray-600"></p>
+            <div class="mt-6 flex flex-col space-y-2">
+                <button id="modal-action-btn" class="hidden w-full accent-btn py-2 rounded-md">Action</button>
+                <button id="modal-close-btn" class="w-full formal-btn py-2 rounded-md">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-8 max-w-sm w-full text-center border-t-4 border-red-600">
+            <h3 id="confirm-modal-title" class="text-xl font-bold text-gray-800">Confirmar Acción</h3>
+            <p id="confirm-modal-message" class="mt-4 text-gray-600">¿Está seguro de que desea cancelar su cita?</p>
+            <div class="mt-6 flex justify-center space-x-4">
+                <button id="confirm-modal-yes-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-md hover:bg-red-700">Sí, Cancelar</button>
+                <button id="confirm-modal-no-btn" class="bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-md hover:bg-gray-400">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const AppState = {
+            data: {
+                currentUser: null,
+                appointment: null,
+                documents: [],
+                generatedDocs: [],
+                selectedCourt: null 
+            },
+            save() {
+                localStorage.setItem('portalJuridicoState', JSON.stringify(this.data));
+            },
+            load() {
+                const savedState = localStorage.getItem('portalJuridicoState');
+                if (savedState) {
+                    this.data = JSON.parse(savedState);
+                }
+            },
+            reset() {
+                this.data = { currentUser: this.data.currentUser, appointment: null, documents: [], generatedDocs: [], selectedCourt: null };
+                this.save();
+            }
+        };
+
+        const views = document.querySelectorAll('.view');
+        function showView(viewId) {
+            views.forEach(view => view.classList.remove('active-view'));
+            document.getElementById(viewId).classList.add('active-view');
+            if (viewId === 'menu-view') {
+                updateUI();
+            }
+        }
+
+        const notificationModal = document.getElementById('notification-modal');
+        function showModal(title, message, action = null) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            
+            const actionBtn = document.getElementById('modal-action-btn');
+            const closeBtn = document.getElementById('modal-close-btn');
+
+            if (action && action.text && action.onClick) {
+                actionBtn.textContent = action.text;
+                actionBtn.onclick = action.onClick;
+                actionBtn.classList.remove('hidden');
+                closeBtn.classList.add('hidden');
+            } else {
+                actionBtn.classList.add('hidden');
+                closeBtn.classList.remove('hidden');
+            }
+            
+            notificationModal.classList.remove('hidden');
+        }
+        function closeModal() {
+            notificationModal.classList.add('hidden');
+            showView('menu-view');
+        }
+        document.getElementById('modal-close-btn').onclick = closeModal;
+
+        const confirmModal = document.getElementById('confirm-modal');
+        document.getElementById('confirm-modal-no-btn').onclick = () => confirmModal.classList.add('hidden');
+
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const nameInput = document.getElementById('nombre');
+            const cedulaInput = document.getElementById('cedula');
+            const telefonoInput = document.getElementById('telefono');
+            const generoInput = document.getElementById('genero');
+
+            if (nameInput.value.trim() === '' || cedulaInput.value.trim() === '' || telefonoInput.value.trim() === '' || !generoInput.value) {
+                showModal('Datos incompletos', 'Por favor, ingrese todos los campos.');
+                return;
+            }
+            AppState.data.currentUser = {
+                name: nameInput.value.trim(),
+                cedula: cedulaInput.value.trim(),
+                telefono: telefonoInput.value.trim(),
+                genero: generoInput.value
+            };
+            AppState.save();
+            logEvent('Inicio de Sesión', `Usuario: ${AppState.data.currentUser.name}`);
+            updateUI();
+            showView('menu-view');
+        });
+
+        function logout() {
+            localStorage.removeItem('portalJuridicoState');
+            AppState.data = { currentUser: null, appointment: null, documents: [], generatedDocs: [] };
+            document.getElementById('nombre').value = '';
+            document.getElementById('cedula').value = '';
+            document.getElementById('telefono').value = '';
+            document.getElementById('genero').value = '';
+            updateUI();
+            showView('login-view');
+        }
+
+        const monthYearEl = document.getElementById('month-year');
+        const calendarGrid = document.getElementById('calendar-grid');
+        let currentDate = new Date();
+
+        function renderCalendar() {
+            const calendarType = document.getElementById('calendar-title').textContent;
+            calendarGrid.innerHTML = '';
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            monthYearEl.textContent = new Date(year, month).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            weekDays.forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'font-semibold text-sm text-gray-600';
+                dayEl.textContent = day;
+                calendarGrid.appendChild(dayEl);
+            });
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayEl = document.createElement('div');
+                dayEl.textContent = i;
+                dayEl.className = 'p-2 cursor-pointer rounded-full calendar-day';
+                const today = new Date();
+                const dayDate = new Date(year, month, i);
+                
+                let isAvailable = true;
+
+                if (dayDate < today.setHours(0,0,0,0)) {
+                    isAvailable = false;
+                } else if (calendarType === 'Punto de Atención Jurídico') {
+                    if (dayDate.getDay() !== 4) {
+                        isAvailable = false;
+                    }
+                } else if (calendarType === 'Conciliación y Mediaciones') {
+                    if (dayDate.getDay() === 0 || dayDate.getDay() === 6) {
+                        isAvailable = false;
+                    }
+                }
+
+                if (isAvailable) {
+                    dayEl.classList.add('available', 'text-gray-800', 'font-medium');
+                    dayEl.onclick = () => selectDate(dayDate);
+                } else {
+                    dayEl.classList.add('text-gray-400', 'pointer-events-none');
+                }
+                calendarGrid.appendChild(dayEl);
+            }
+        }
+        
+        document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
+        document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
+
+        function selectDate(date) {
+            document.getElementById('selected-date-span').textContent = date.toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeSlotsEl = document.getElementById('time-slots');
+            timeSlotsEl.innerHTML = '';
+            const availableTimes = ['09:00 AM', '09:30 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:30 PM'];
+            availableTimes.forEach(time => {
+                const timeEl = document.createElement('button');
+                timeEl.textContent = time;
+                timeEl.className = 'p-3 bg-gray-800 text-white rounded-md transition time-slot available';
+                timeEl.onclick = () => bookAppointment(date, time);
+                timeSlotsEl.appendChild(timeEl);
+            });
+        }
+
+        function bookAppointment(date, time) {
+            const type = document.getElementById('calendar-title').textContent;
+            AppState.data.appointment = { type, date: date.toLocaleDateString('es-CO'), time };
+            AppState.save();
+            logEvent('Cita Agendada', `Tipo: ${type}, Fecha: ${date.toLocaleDateString('es-CO')}, Hora: ${time}`);
+
+            const notificationAction = {
+                text: "Notificar Agendamiento",
+                onClick: () => {
+                    notifyAppointmentByEmail();
+                    document.getElementById('modal-action-btn').classList.add('hidden');
+                    document.getElementById('modal-close-btn').classList.remove('hidden');
+                    document.getElementById('modal-message').textContent = "Se ha abierto su cliente de correo para la notificación. Ya puede cerrar esta ventana.";
+                }
+            };
+
+            showModal(
+                'Cita Agendada', 
+                `Su cita para ${type} ha sido programada para el ${AppState.data.appointment.date} a las ${AppState.data.appointment.time}.`,
+                notificationAction
+            );
+        }
+        
+        function notifyAppointmentByEmail() {
+            const { appointment, currentUser } = AppState.data;
+            if (!appointment || !currentUser) return;
+
+            const recipient = 'puntoconsultoriojuridico@gmail.com';
+            const subject = `Nueva Cita Agendada - ${currentUser.name}`;
+            let body = "Se ha agendado una nueva cita a través del portal de autoservicio:\n\n";
+            body += `Usuario: ${currentUser.name}\n`;
+            body += `Cédula: ${currentUser.cedula}\n`;
+            body += `Teléfono: ${currentUser.telefono}\n`;
+            body += `Género: ${currentUser.genero}\n`;
+            body += `Tipo de Cita: ${appointment.type}\n`;
+            body += `Fecha: ${appointment.date}\n`;
+            body += `Hora: ${appointment.time}\n\n`;
+            body += "Este correo es una notificación automática del sistema local.";
+
+            window.open(`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+        }
+        
+        function showCalendar(type) {
+            document.getElementById('calendar-title').textContent = type;
+            renderCalendar(); 
+            showView('calendar-view');
+        }
+
+        function confirmCancelAppointment() {
+            confirmModal.classList.remove('hidden');
+            document.getElementById('confirm-modal-yes-btn').onclick = () => {
+                logEvent('Cita Cancelada', `Tipo: ${AppState.data.appointment.type}, Fecha: ${AppState.data.appointment.date}`);
+                AppState.data.appointment = null;
+                AppState.save();
+                updateUI();
+                confirmModal.classList.add('hidden');
+                showModal('Cita Cancelada', 'Su cita ha sido cancelada exitosamente.');
+            };
+        }
+
+        function selectCourtAndProceed(courtName) {
+            AppState.data.selectedCourt = courtName;
+            AppState.save();
+            showView('generate-doc-view');
+        }
+
+        function showGenerateDoc() {
+            showView('generate-doc-view');
+            document.getElementById('doc-preview-container').classList.add('hidden');
+        }
+
+        function generateDocument(docType) {
+            const { name, cedula, telefono, genero } = AppState.data.currentUser;
+            const { selectedCourt } = AppState.data; 
+            const previewContainer = document.getElementById('doc-preview-container');
+            const previewTitle = document.getElementById('doc-preview-title');
+            const previewContent = document.getElementById('doc-preview-content');
+            const downloadBtn = document.getElementById('download-btn');
+            const prepareEmailBtn = document.getElementById('prepare-email-btn');
+
+            previewTitle.textContent = docType;
+            
+            let content = `Ciudad y Fecha: Pensilvania, Caldas, ${new Date().toLocaleDateString('es-CO')}\n\n`;
+            content += `SEÑORES\n${selectedCourt.toUpperCase()}\nE.S.D.\n\n`;
+            content += `Referencia: ${docType}\n\n`;
+            content += `Yo, ${name}, identificado(a) con cédula de ciudadanía No. ${cedula}, por medio del presente escrito, me permito presentar ${docType.toLowerCase()}...\n\n`;
+            content += `[CUERPO DEL DOCUMENTO: Aquí irían los hechos, pretensiones, etc.]\n\n\n`;
+            content += `*** NO OLVIDE ADJUNTAR SUS ANEXOS ***\n\n\n`;
+            content += `Atentamente,\n\n`;
+            content += `________________________\n`;
+            content += `${name}\n`;
+            content += `C.C. ${cedula}\n`;
+            content += `Teléfono: ${telefono}\n`;
+            content += `Género: ${genero}`;
+            
+            previewContent.value = content;
+            previewContainer.classList.remove('hidden');
+
+            logEvent('Documento Generado', `Tipo: ${docType}, Juzgado: ${selectedCourt}`);
+            
+            downloadBtn.onclick = () => {
+                const editedContent = document.getElementById('doc-preview-content').value;
+                const blob = new Blob([editedContent], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${docType.replace(/ /g, '_')}_${cedula}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+            
+            prepareEmailBtn.onclick = () => {
+                const editedContent = document.getElementById('doc-preview-content').value;
+                prepareEmail(editedContent, docType);
+            };
+        }
+        
+        function prepareEmail(content, docTitle) {
+            let email = '';
+            
+            if (AppState.data.selectedCourt) {
+                if (AppState.data.selectedCourt === 'Juzgado Promiscuo Municipal') {
+                    email = 'j01prmpalpensil@cendoj.ramajudicial.gov.co';
+                } else if (AppState.data.selectedCourt === 'Juzgado Promiscuo del Circuito') {
+                    email = 'j01prctopensil@cendoj.ramajudicial.gov.co';
+                }
+            }
+
+            if (!email) {
+                showModal('Error', 'No se ha seleccionado un juzgado de destino.');
+                return;
+            }
+
+            const subject = `Envío de Documentación Jurídica - ${AppState.data.currentUser.name}`;
+            
+            let body = "Cordial saludo,\n\n";
+
+            body += "A continuación se presenta el contenido del documento generado:\n\n";
+            body += `----------------------------------------\n`;
+            body += `INICIO DEL DOCUMENTO: ${docTitle}\n`;
+            body += `----------------------------------------\n\n`;
+            body += content;
+            
+            window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+
+            showModal('Proceso Finalizado', 'Se ha abierto su programa de correo. Puede cerrar esta ventana para volver al menú.');
+            logEvent('Correo Preparado', `Documento: ${docTitle}, Destino: ${email}`);
+        }
+        
+        function updateUI() {
+            const { currentUser, appointment } = AppState.data;
+            const reminder = document.getElementById('appointment-reminder');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            if (currentUser) {
+                document.getElementById('userInfoHeader').textContent = `Usuario: ${currentUser.name} - C.C. ${currentUser.cedula} - Tel: ${currentUser.telefono} - Género: ${currentUser.genero}`;
+                logoutBtn.classList.remove('hidden');
+            } else {
+                document.getElementById('userInfoHeader').textContent = '';
+                logoutBtn.classList.add('hidden');
+            }
+
+            if (appointment) {
+                document.getElementById('reminder-text').textContent = `${appointment.type} - ${appointment.date} a las ${appointment.time}.`;
+                reminder.classList.remove('hidden');
+            } else {
+                reminder.classList.add('hidden');
+            }
+        }
+
+        function logEvent(eventType, details) {
+            let log = JSON.parse(localStorage.getItem('portalLog')) || [];
+            const { currentUser } = AppState.data;
+            
+            const newEntry = {
+                timestamp: new Date().toLocaleString('es-CO'),
+                user: currentUser ? currentUser.name : 'N/A',
+                cedula: currentUser ? currentUser.cedula : 'N/A',
+                telefono: currentUser ? currentUser.telefono : 'N/A',
+                eventType: eventType,
+                details: details
+            };
+            log.push(newEntry);
+            localStorage.setItem('portalLog', JSON.stringify(log));
+        }
+
+        function exportToCSV() {
+            let log = JSON.parse(localStorage.getItem('portalLog')) || [];
+            if (log.length === 0) {
+                showModal('Sin Registros', 'Aún no hay actividades para exportar.');
+                return;
+            }
+
+            const headers = '"Fecha y Hora","Usuario","Cédula","Teléfono","Tipo de Evento","Detalles"';
+            let csvContent = "data:text/csv;charset=utf-8," + headers + "\n";
+
+            log.forEach(entry => {
+                const row = `"${entry.timestamp}","${entry.user}","${entry.cedula}","${entry.telefono}","${entry.eventType}","${entry.details}"`;
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "registros_portal_juridico.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            AppState.load();
+            updateUI();
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            document.getElementById('export-logo-btn').addEventListener('click', exportToCSV);
+            
+            if (AppState.data.currentUser) {
+                showView('menu-view');
+            } else {
+                showView('login-view');
+            }
+        });
+    </script>
+</body>
+</html>
+
